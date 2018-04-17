@@ -1,5 +1,11 @@
+/**
+@file StereoVisionForADAS.cpp
+@date 2017/09/03
+@author tkwoo(wtk1101@gmail.com)
+@brief matching, stixel creation, objectness wrapper
+*/
 #include "../include/StereoVisionForADAS.h"
- 
+
 
 StereoCamParam_t CStereoVisionForADAS::InitStereoParam(int nDatasetName)
 {
@@ -24,7 +30,7 @@ StereoCamParam_t CStereoVisionForADAS::InitStereoParam(int nDatasetName)
 		objStereoCamParam.m_nWindowSize = 11;
 		objStereoCamParam.objCamParam.m_dCameraHeight = 1.65;			//TBD..
 		objStereoCamParam.objCamParam.m_dFocalLength = 722;
-		objStereoCamParam.objCamParam.m_dPitchDeg = -1.;	
+		objStereoCamParam.objCamParam.m_dPitchDeg = -1.;	///< ������ ���׷��� ����� ������ �ݴ�� ��. ���׷��� ����
 		objStereoCamParam.objCamParam.m_dYawDeg = -1.2;
 		objStereoCamParam.objCamParam.m_dOx = 610;
 		objStereoCamParam.objCamParam.m_dOy = 173;
@@ -32,34 +38,32 @@ StereoCamParam_t CStereoVisionForADAS::InitStereoParam(int nDatasetName)
 	}
 	else if (nDatasetName == CityScape)
 	{
+		//printf("CityScape DB is not availabe yet. sorry");
 		objStereoCamParam.m_dBaseLine = 0.21;
 		objStereoCamParam.m_dMaxDist = 70.;
 		objStereoCamParam.m_nNumberOfDisp = 80;
 		objStereoCamParam.m_nWindowSize = 11;
-		objStereoCamParam.objCamParam.m_dCameraHeight = 1.22;			
+		objStereoCamParam.objCamParam.m_dCameraHeight = 1.22;
 		objStereoCamParam.objCamParam.m_dFocalLength = 2263.5/2;
 		objStereoCamParam.objCamParam.m_dPitchDeg = -2.18;
 		objStereoCamParam.objCamParam.m_dYawDeg = -1.2;
 		objStereoCamParam.objCamParam.m_dOx = 610;
 		objStereoCamParam.objCamParam.m_dOy = 173;
+		//objStereoCamParam.objCamParam.m_sizeSrc = cv::Size(2048 * fScale, 1024 * fScale);
 		objStereoCamParam.objCamParam.m_sizeSrc = cv::Size(1024, 512);
 	}
 	else
 		printf("This DB is not availabe. sorry");
-
 	PitchDegToVanishingLine(objStereoCamParam);
-	
+	//cout << objStereoCamParam.objCamParam.m_sizeSrc << endl;
+
 	return objStereoCamParam;
 }
-
-//calculate VanishingY
 int CStereoVisionForADAS::PitchDegToVanishingLine(StereoCamParam_t& objStereoParam)
 {
 	objStereoParam.objCamParam.m_nVanishingY = (int)(objStereoParam.objCamParam.m_dFocalLength*tan(objStereoParam.objCamParam.m_dPitchDeg*PI / 180)) + objStereoParam.objCamParam.m_sizeSrc.height / 2;
-	
 	return 0;
 }
-
 void CStereoVisionForADAS::MakePseudoColorLUT()
 {
 	int b = 125;
@@ -123,12 +127,13 @@ void CStereoVisionForADAS::cvtPseudoColorImage(Mat& srcGray, Mat& dstColor)
 			dstColor.data[(i*srcGray.cols + j) * 3 + 2] = m_pseudoColorLUT[val][2];
 		}
 	}
-	
+
 }
 
 CStereoVisionForADAS::CStereoVisionForADAS(StereoCamParam_t& objStereoParam)
 	:m_objStereoMatching(objStereoParam), m_objStixelEstimation(objStereoParam), m_objStixelSegmentation(objStereoParam)
 {
+	//cout << objStereoParam.objCamParam.m_sizeSrc << endl;
 	m_objStereoParam = objStereoParam;
 	MakePseudoColorLUT();
 	m_imgColorDisp = Mat(objStereoParam.objCamParam.m_sizeSrc, CV_8UC3);
@@ -137,7 +142,6 @@ CStereoVisionForADAS::CStereoVisionForADAS(StereoCamParam_t& objStereoParam)
 	m_imgStixelGray = Mat(objStereoParam.objCamParam.m_sizeSrc, CV_8UC1);
 	m_imgStixelGray = Scalar(0);
 }
-
 int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 {
 	m_vecobjBB.clear();
@@ -147,12 +151,14 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 	if (imgLeft.channels() == 3){
 		cvtColor(imgLeft, m_imgLeftInput, CV_BGR2GRAY);
 		cvtColor(imgRight, m_imgRightInput, CV_BGR2GRAY);
+		//return NO_PROB;
 	}
-	else{
+	else
+	{
 		m_imgLeftInput = imgLeft;
 		m_imgRightInput = imgRight;
 	}
-	
+
 #if CV_MAJOR_VERSION==2
 	m_objStereoMatching.MakeDisparity(m_imgLeftInput, m_imgRightInput,false);
 #else
@@ -161,12 +167,13 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 	m_matDisp16 = m_objStereoMatching.m_matDisp16;
 	m_imgDisp8 = m_objStereoMatching.m_imgDisp8;
 
-#ifdef _DEBUG
 	imshow("disparity", m_imgDisp8);
-#endif
+
+	int test_variable_x = 10;
+    waitKey();
 
 	m_imgGround = Scalar(0);
-	m_objStixelEstimation.EstimateStixels(m_matDisp16, m_imgDisp8);
+	m_objStixelEstimation.EstimateStixels(m_matDisp16, m_imgDisp8);//, false);
 	m_imgGround = m_objStixelEstimation.m_imgGround;
 	m_vecobjStixelInROI = m_objStixelEstimation.m_vecobjStixelInROI;
 	m_vecobjStixels = m_objStixelEstimation.m_vecobjStixels;
@@ -174,10 +181,19 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 	m_objStixelSegmentation.SegmentStixel(m_vecobjStixels);
 	m_vecobjBB = m_objStixelSegmentation.m_vecobjBB;
 
+
+	/*for (int i = 0; i < m_vecobjStixels.size(); i++)
+	{
+		cout << m_vecobjStixels[i].nCol << ":"
+			<< m_vecobjStixels[i].nGround << ":"
+			<< m_vecobjStixels[i].nHeight << ":"
+			<< m_vecobjStixels[i].dZ << endl;
+		imshow("tt", m_imgDisp8);
+		waitKey(1);
+	}*/
+//cout << "hi" << endl;
 	return 0;
-
 }
-
 int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight, Mat& imgDisp8)
 {
 	m_vecobjBB.clear();
@@ -193,20 +209,28 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight, Mat& imgDisp8)
 		m_imgLeftInput = imgLeft;
 		m_imgRightInput = imgRight;
 	}
+	// m_matDisp16 = m_objStereoMatching.m_matDisp16;
 	m_imgDisp8 = imgDisp8;
-	
+
 	m_imgGround = Scalar(0);
 	m_objStixelEstimation.EstimateStixels_only8bitDisp(m_imgDisp8);//, false);
 	m_imgGround = m_objStixelEstimation.m_imgGround;
 	m_vecobjStixelInROI = m_objStixelEstimation.m_vecobjStixelInROI;
 	m_vecobjStixels = m_objStixelEstimation.m_vecobjStixels;
 
+
+// #ifdef _DEBUG
+// 	m_objStixelSegmentation.SetDebugImg(m_imgLeftInput);
+// #endif
 	m_objStixelSegmentation.SegmentStixel(m_vecobjStixels);
 	m_vecobjBB = m_objStixelSegmentation.m_vecobjBB;
+// #ifdef _DEBUG
+// 	cout << "stixel size : " << m_vecobjStixelInROI.size() << endl;
+// 	cout << "objectness size : " << m_vecobjBB.size() << endl;
+// #endif
 
 	return 0;
 }
-
 int CStereoVisionForADAS::RectToDisp(Rect& rectBox, Mat& matRect)
 {
 	if (m_matDisp16.empty()) { cout << "There is no disparity image" << endl; return -1; }
@@ -229,6 +253,7 @@ int CStereoVisionForADAS::Disp16ToDepth(const uchar nDisparity, float& fDistance
 void CStereoVisionForADAS::Display()
 {
 	TopViewStixel(m_vecobjStixelInROI);
+	//imshow("topview", m_imgTopView);
 }
 void CStereoVisionForADAS::Display(Mat& imgDisplay)
 {
@@ -251,6 +276,9 @@ void CStereoVisionForADAS::Display(Mat& imgDisplay, Mat& imgStixelResult)
 		rectangle(imgDisplay, m_vecobjBB[i].rectBB, Scalar::all(255 - m_vecobjBB[i].dZ / fBrightness * 255), 2, 8);
 	}
 
+	/*Mat imgStixelTemp = m_imgColorDisp.clone();
+	DrawStixel(imgStixelTemp, m_vecobjStixelInROI);
+	imshow("gg", imgStixelTemp);*/
 	m_imgStixelGray = Scalar(0);
 
 	DrawGround(m_imgColorDisp, m_imgGround);
@@ -267,7 +295,7 @@ void CStereoVisionForADAS::Display(Mat& imgDisplay, Mat& imgStixelResult)
 		sprintf_s(temp, sizeof(temp), "%.2fm", m_vecobjBB[i].dZ);
 		putText(imgStixelResult, temp, m_vecobjBB[i].rectBB.br() - Point(m_vecobjBB[i].rectBB.width, 0), FONT_HERSHEY_SIMPLEX, 0.4, Scalar(0, 0, 255 - m_vecobjBB[i].dZ / fBrightness * 250), 2);
 	}
-	
+
 
 }
 void CStereoVisionForADAS::DrawLane(Mat& imgResult, StereoCamParam_t& objStereoParam)
@@ -304,6 +332,8 @@ void CStereoVisionForADAS::DrawGround(Mat& imgResult, Mat& imgGround)
 	Mat imgTemp = imgResult.clone();
 	imgTemp = Scalar(0, 75, 150);
 	imgResult = imgResult&imgTemp;
+	/*imshow("temp", imgResult);
+	waitKey();*/
 }
 void CStereoVisionForADAS::TopViewStixel(vector<stixel_t>& objStixelInROI)
 {
@@ -333,9 +363,12 @@ void CStereoVisionForADAS::TopViewStixel(vector<stixel_t>& objStixelInROI)
 	for (unsigned int u = 0; u < objStixelInROI.size(); u++){
 		int nDistance = (int)objStixelInROI[u].dZ * nScale;
 		if (nDistance < 500) imgTopView.at<Vec3b>(500 - nDistance, objStixelInROI[u].nCol) = Vec3b(255, 255, 0);//Vec3b(0, 0, 10*(double)nDistance*m_vecobjStixels[u].nHeight/(double)m_nFocalLength);
+		//imshow("topview", imgTopView);
+		//waitKey(20);
 	}
 
 	imgTopView.copyTo(m_imgTopView);
+	//imshow("topview", imgTopView);
 
 }
 void CStereoVisionForADAS::TopViewLane(Mat& imgTopView, float fLaneInterval, int nCenterPointX)

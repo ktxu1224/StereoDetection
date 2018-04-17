@@ -1,23 +1,30 @@
+/**
+@file StereoMatcing.cpp
+@date 2017/09/03
+@author tkwoo(wtk1101@gmail.com).
+@brief create disparity map
+*/
+
 #include "../include/StereoMatching.h"
+// Ptr<StereoBM> bm = StereoBM::create(48, 9); ///< default construct
 
 CStereoMatching::CStereoMatching(StereoCamParam_t& objStereoParam)
 {
 	SetParamOCVStereo(objStereoParam);
 }
-
 CStereoMatching::CStereoMatching(Mat& imgLeftInput, Mat& imgRightInput, StereoCamParam_t& objStereoParam)
 {
 	SetParamOCVStereo(objStereoParam);
 	m_imgLeftInput = imgLeftInput;
 	m_imgRightInput = imgRightInput;
 }
-
 void CStereoMatching::SetParamOCVStereo(StereoCamParam_t& objStereoParam)
 {
 	m_objStereoParam = objStereoParam;
 
 #if CV_MAJOR_VERSION==3
 	bm->create(m_objStereoParam.m_nNumberOfDisp, m_objStereoParam.m_nWindowSize);
+
 	bm->setPreFilterCap(31);
 	bm->setBlockSize(m_objStereoParam.m_nWindowSize > 0 ? m_objStereoParam.m_nWindowSize : 9);
 	bm->setMinDisparity(0);
@@ -28,17 +35,6 @@ void CStereoMatching::SetParamOCVStereo(StereoCamParam_t& objStereoParam)
 	bm->setSpeckleRange(32);			//4;
 	//bm->setSmallerBlockSize(9);
 	//bm->setDisp12MaxDiff(1);
-
-	/*sgbm->create(0, m_objStereoParam.m_nNumberOfDisp, m_objStereoParam.m_nWindowSize);
-	sgbm->setPreFilterCap(31);
-	sgbm->setBlockSize(m_objStereoParam.m_nWindowSize > 0 ? m_objStereoParam.m_nWindowSize : 9);
-	sgbm->setMinDisparity(0);
-	sgbm->setNumDisparities(m_objStereoParam.m_nNumberOfDisp);
-	sgbm->setUniquenessRatio(5);
-	sgbm->setSpeckleWindowSize(100);
-	sgbm->setSpeckleRange(32);
-	sgbm->setDisp12MaxDiff(1);*/
-	
 #else
 	bm.state->preFilterCap = 31;
 	bm.state->SADWindowSize = m_objStereoParam.m_nWindowSize > 0 ? m_objStereoParam.m_nWindowSize : 9;
@@ -52,11 +48,10 @@ void CStereoMatching::SetParamOCVStereo(StereoCamParam_t& objStereoParam)
 #endif
 
 }
-
-MATCHING_ERROR CStereoMatching::SetImage(Mat& imgLeft, Mat& imgRight) {
+MATCHING_ERROR CStereoMatching::SetImage(Mat& imgLeft, Mat& imgRight){
 	if (imgLeft.size() != imgRight.size()) return IMGSCALE_ERR;
 	if (imgLeft.size() != m_objStereoParam.objCamParam.m_sizeSrc) return IMGSCALE_ERR;
-	if (imgLeft.channels() == 3) {
+	if (imgLeft.channels() == 3){
 		cvtColor(imgLeft, m_imgLeftInput, CV_BGR2GRAY);
 		cvtColor(imgRight, m_imgRightInput, CV_BGR2GRAY);
 		return NO_PROB;
@@ -66,58 +61,55 @@ MATCHING_ERROR CStereoMatching::SetImage(Mat& imgLeft, Mat& imgRight) {
 
 	return NO_PROB;
 }
-
 MATCHING_ERROR CStereoMatching::MakeDisparity()
 {
 	MakeDisparity(m_imgLeftInput, m_imgRightInput, m_matDisp16);
 	m_matDisp16.convertTo(m_imgDisp8, CV_8U, 255 / (m_objStereoParam.m_nNumberOfDisp*16.));
-	
+	//m_imgDisp8_ori = m_imgDisp8.clone();
+	//imshow("disp", m_imgDisp8);
+
 	return NO_PROB;
 }
-
-MATCHING_ERROR CStereoMatching::MakeDisparity(Mat& imgLeft, Mat& imgRight, bool flagUseWLSFilter)
+MATCHING_ERROR CStereoMatching::MakeDisparity(Mat& imgLeft, Mat& imgRight, bool flgUseWLSFilter)
 {
 #if CV_MAJOR_VERSION==2
 	flgUseWLSFilter = false;
 #endif
-
 	MATCHING_ERROR Error;
 	Error = SetImage(imgLeft, imgRight);
-
-	if (flagUseWLSFilter == false) {
+	//cout << Error << endl;
+	if (flgUseWLSFilter == false){
 		MakeDisparity();
 		ImproveDisparity_Naive(m_imgDisp8);
 	}
-
 #if CV_MAJOR_VERSION==3
-	else if (flagUseWLSFilter == false) {
+	else if (flgUseWLSFilter == false){
 	}
-	// There is matching code inside the WLSFilter(), It is 
-	else
-		ImproveDisparity_WLSFilter(m_imgDisp8);
+	// There is matching code inside the WLSFilter(), It is
+	else ImproveDisparity_WLSFilter(m_imgDisp8);
 #endif
 	return Error;
 }
-
-MATCHING_ERROR CStereoMatching::MakeDisparity(Mat& imgLeft, Mat& imgRight, Mat& matDisp16) {
+MATCHING_ERROR CStereoMatching::MakeDisparity(Mat& imgLeft, Mat& imgRight, Mat& matDisp16){
 #if CV_MAJOR_VERSION==3
+	// cout << "SADWindowSize : " << bm->getBlockSize() << endl;
+	// cout << "NumOfDisparity : " << bm->getNumDisparities() << endl;
 	bm->compute(imgLeft, imgRight, matDisp16);
+	// cout << "complete" << endl;
 #else
 	bm(imgLeft, imgRight, matDisp16, CV_16S);
 #endif
 	m_matDisp16 = matDisp16;
-
 	return NO_PROB;
 }
-
 MATCHING_ERROR CStereoMatching::ImproveDisparity_Naive(Mat& imgDisp8)
 {
 	uchar chTempCur = 0;
 	uchar chTempPrev = 0;
 
 	int cnt = 1;
-	for (int v = 0; v < imgDisp8.rows; v++) {
-		for (int u = m_objStereoParam.m_nNumberOfDisp; u < imgDisp8.cols; u++) {
+	for (int v = 0; v < imgDisp8.rows; v++){
+		for (int u = m_objStereoParam.m_nNumberOfDisp; u < imgDisp8.cols; u++){
 			chTempCur = imgDisp8.at<uchar>(v, u);
 			//shTempCur = m_matDisp16.at<short>(v, u);
 			if (chTempCur == 0) {
@@ -136,7 +128,6 @@ MATCHING_ERROR CStereoMatching::ImproveDisparity_Naive(Mat& imgDisp8)
 	morphologyEx(imgDisp8, imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 2);
 	return NO_PROB;
 }
-
 MATCHING_ERROR CStereoMatching::ImproveDisparity_WLSFilter(Mat& imgDisp8)
 {
 #if CV_MAJOR_VERSION==3
@@ -154,6 +145,9 @@ MATCHING_ERROR CStereoMatching::ImproveDisparity_WLSFilter(Mat& imgDisp8)
 	bm->compute(m_imgLeftInput, m_imgRightInput, matDispLeft16);
 	right_bm->compute(m_imgRightInput, m_imgLeftInput, matDispRight16);
 	wls_filter->filter(matDispLeft16, m_imgLeftInput, m_matDisp16, matDispRight16);
+	/*conf_map = wls_filter->getConfidenceMap();
+
+	m_rectFilterROI = wls_filter->getROI();*/
 
 	m_matDisp16.convertTo(imgDisp8, CV_8U, 255 / (m_objStereoParam.m_nNumberOfDisp*16.));
 #endif

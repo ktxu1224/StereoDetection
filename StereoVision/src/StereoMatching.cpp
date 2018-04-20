@@ -63,11 +63,17 @@ MATCHING_ERROR CStereoMatching::SetImage(Mat& imgLeft, Mat& imgRight){
 }
 MATCHING_ERROR CStereoMatching::MakeDisparity()
 {
+    // Code to create disparity maps out of
+    std::cout<<"Disparity 3: Call Function "<<std::endl;
 	MakeDisparity(m_imgLeftInput, m_imgRightInput, m_matDisp16);
+	std::cout<<"Disparity 5: Convert from 16 to 8"<<std::endl;
 	m_matDisp16.convertTo(m_imgDisp8, CV_8U, 255 / (m_objStereoParam.m_nNumberOfDisp*16.));
+
+	//Mat m_imgDisp8_ori;
 	//m_imgDisp8_ori = m_imgDisp8.clone();
 	//imshow("disp", m_imgDisp8);
-
+    //std::cout<<"Reached Make Disparity Map"<<std::endl;
+    //waitKey();
 	return NO_PROB;
 }
 MATCHING_ERROR CStereoMatching::MakeDisparity(Mat& imgLeft, Mat& imgRight, bool flgUseWLSFilter)
@@ -79,8 +85,12 @@ MATCHING_ERROR CStereoMatching::MakeDisparity(Mat& imgLeft, Mat& imgRight, bool 
 	Error = SetImage(imgLeft, imgRight);
 	//cout << Error << endl;
 	if (flgUseWLSFilter == false){
+		std::cout<<"Disparity 2: Function call Inside Stereo Matching"<<std::endl;
 		MakeDisparity();
+        //Code Used to create disparity
+        std::cout<<"Disparity 6: Improve Disparity"<<std::endl;
 		ImproveDisparity_Naive(m_imgDisp8);
+
 	}
 #if CV_MAJOR_VERSION==3
 	else if (flgUseWLSFilter == false){
@@ -94,6 +104,7 @@ MATCHING_ERROR CStereoMatching::MakeDisparity(Mat& imgLeft, Mat& imgRight, Mat& 
 #if CV_MAJOR_VERSION==3
 	// cout << "SADWindowSize : " << bm->getBlockSize() << endl;
 	// cout << "NumOfDisparity : " << bm->getNumDisparities() << endl;
+	std::cout<<"Disparity 4: Apply BM algorithm"<<std::endl;
 	bm->compute(imgLeft, imgRight, matDisp16);
 	// cout << "complete" << endl;
 #else

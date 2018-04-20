@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1523973998 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/main.cpp
+1524209018 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/main.cpp
 	<opencv2/opencv.hpp>
 	<iostream>
 	<fstream>
@@ -8,7 +8,7 @@
 	"../include/SurfaceNormal.h"
 	<opencv2/viz.hpp>
 
-1523973708 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StereoVisionForADAS.h
+1523974487 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StereoVisionForADAS.h
 	"opencv2/opencv.hpp"
 	<iostream>
 	"StereoMatching.h"
@@ -16,43 +16,43 @@
 	"StixelSegmenation.h"
 	"DefStruct.h"
 
-1523972908 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StereoMatching.h
+1523974478 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StereoMatching.h
 	"opencv2/opencv.hpp"
 	<iostream>
 	"opencv2/ximgproc.hpp"
 	"opencv2/imgcodecs.hpp"
-	"../include/DefStruct.h"
+	"DefStruct.h"
 
 1523968625 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/DefStruct.h
 	<opencv2/opencv.hpp>
 	<iostream>
 
-1523973722 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StixelEstimation.h
+1523974495 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StixelEstimation.h
 	<iostream>
 	"DefStruct.h"
 
-1523972927 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StixelSegmenation.h
+1523974504 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/StixelSegmenation.h
 	<opencv2/opencv.hpp>
 	<iostream>
 	<map>
-	"../include/DefStruct.h"
+	"DefStruct.h"
 	"StixelEstimation.h"
 
-1523972960 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StereoMatching.cpp
+1524211213 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StereoMatching.cpp
 	"../include/StereoMatching.h"
 
-1523972976 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StereoVisionForADAS.cpp
+1524209433 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StereoVisionForADAS.cpp
 	"../include/StereoVisionForADAS.h"
 
-1523972987 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StixelEstimation.cpp
+1523974420 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StixelEstimation.cpp
 	"../include/StixelEstimation.h"
 
-1523973005 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StixelSegmentation.cpp
+1523974450 source:/home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/src/StixelSegmentation.cpp
 	"../include/StixelSegmenation.h"
 
-1523972945 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/SurfaceNormal.h
+1523974515 /home/max/Studium/AD_Challenge/Git_shared/StereoDetection/StereoVision/include/SurfaceNormal.h
 	<opencv2/opencv.hpp>
 	<iostream>
-	"../include/DefStruct.h"
+	"DefStruct.h"
 	<fstream>
 

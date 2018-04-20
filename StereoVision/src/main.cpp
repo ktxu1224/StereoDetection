@@ -62,8 +62,7 @@ int main()
 
 		//imshow("right", imgRight);
 		//waitKey();
-        int test_variable = 0;
-        waitKey();
+
 
 		int64 t = getTickCount();
 

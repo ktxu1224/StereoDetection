@@ -160,17 +160,23 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 	}
 
 #if CV_MAJOR_VERSION==2
+
+    // First step: Make Disparity out of the stereo image
+
 	m_objStereoMatching.MakeDisparity(m_imgLeftInput, m_imgRightInput,false);
 #else
+    std::cout<<"Disparity 1: Call"<<std::endl;
+    // Intitalise Make Disparity
 	m_objStereoMatching.MakeDisparity(m_imgLeftInput, m_imgRightInput,false); // wls filter
 #endif
+    std::cout<<"Disparity 7: Finished"<<std::endl;
 	m_matDisp16 = m_objStereoMatching.m_matDisp16;
 	m_imgDisp8 = m_objStereoMatching.m_imgDisp8;
 
-	imshow("disparity", m_imgDisp8);
+	imshow("disparity_16", m_imgDisp8);
+	imshow("disparity_08",m_matDisp16);
 
-	int test_variable_x = 10;
-    waitKey();
+
 
 	m_imgGround = Scalar(0);
 	m_objStixelEstimation.EstimateStixels(m_matDisp16, m_imgDisp8);//, false);

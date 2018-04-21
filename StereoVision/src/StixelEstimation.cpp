@@ -44,6 +44,7 @@ STIXEL_ERROR CStixelEstimation::SetDisp8Image(Mat& imgDisp8)
 }
 STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16)
 {
+
 	Size size(5, 5);
 	Mat matKernel = getStructuringElement(MORPH_RECT, size);
 
@@ -63,19 +64,23 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16)
 }
 STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, bool flgUseMultiLayer)
 {
+	std::cout<<"Stixel Estimation 2: Init"<<std::endl;
 	Size size(5, 5);
 	Mat matKernel = getStructuringElement(MORPH_RECT, size);
-
+    std::cout<<"Stixel Estimation 3: Check Size"<<std::endl;
 	SetDispImage(matDisp16, imgDisp8);
-
+    std::cout<<"Stixel Estimation 4: Estimate Ground"<<std::endl;
 	GroundEstimation(m_imgDisp8);
+	std::cout<<"Stixel Estimation 10: Remove Sky"<<std::endl;
 	RmSky(m_imgDisp8);
+	std::cout<<"Stixel Estimation 11: Morphing"<<std::endl;
 	morphologyEx(m_imgDisp8, m_imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 1);
 
-	//imshow("rmgndtemp", m_imgDisp8);
-
+	imshow("rmgndtemp", m_imgDisp8);
+    waitKey();
+    std::cout<<"Stixel Estimation 12: Distance Estimation"<<std::endl;
 	StixelDistanceEstimation(m_imgDisp8, m_vecobjStixels, flgUseMultiLayer);
-
+    std::cout<<"Stixel Estimation 13: Region of Interest(ROI) constrain"<<std::endl;
 	StixelROIConstraint_Lane(m_vecobjStixels, m_vecobjStixelInROI, 3., m_imgDisp8.cols / 2);
 
 	return OK;
@@ -102,18 +107,25 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels_only8bitDisp(Mat& imgDisp8, bool
 
 STIXEL_ERROR CStixelEstimation::GroundEstimation(Mat& imgDisp8)
 {
+    std::cout<<"Stixel Estimation 5: V-Disparity"<<std::endl;
 	ComputeVDisparity(imgDisp8);
 
 	//imshow("imgDisp8", imgDisp8);
 	//imshow("imgVDISP", m_imgVdisp);
 	//waitKey();
+	std::cout<<"Stixel Estimation 6: Remove VD Noise"<<std::endl;
 	RmVDisparityNoise(m_imgVdisp);
+	std::cout<<"Stixel Estimation 7: Extract Ground Point"<<std::endl;
 	ExtractGroundPoint(m_imgVdisp, m_vecLinePoint);
+	std::cout<<"Stixel Estimation 8: Apply Ransac"<<std::endl;
 	FitLineRansac(m_vecLinePoint, m_vec4fLine);
+	std::cout<<"Stixel Estimation 9: Remove Ground"<<std::endl;
 	RmGround(m_vec4fLine, imgDisp8);
+
+	// Comment out later
 	//line(m_imgVdisp, Point(0, m_dGroundVdispOrig), Point(255, 255 * m_dGroundVdispSlope + m_dGroundVdispOrig), Scalar(255), 4);
 	//imshow("vdisp", m_imgVdisp);
-	//waitKey(1);
+	//waitKey();
 	if (m_dGroundVdispOrig <= 0 || m_dGroundVdispSlope > 2 || m_dGroundVdispSlope < 0.5) {
 #ifdef _DEBUG
 		printf("RANSAC : cannot find ground line. out of ranges\n");
@@ -146,6 +158,7 @@ STIXEL_ERROR CStixelEstimation::RmVDisparityNoise(Mat& imgVdisp)
 }
 STIXEL_ERROR CStixelEstimation::ExtractGroundPoint(Mat& imgVdisp, vector<Point2f>& vecLinePoint)
 {
+	std::cout<<"Stixel Estimation 7.1: Extract Ground Point-Process"<<std::endl;
 	vecLinePoint.clear();
 	for (int u = m_objStereoParam.objCamParam.m_nVanishingY; u<imgVdisp.rows; u++){//200 is the vanishing row in image : It will be fixed 150901
 		for (int v = 0; v < imgVdisp.cols; v++){
@@ -208,6 +221,7 @@ STIXEL_ERROR CStixelEstimation::FitLineRansac(vector<Point2f>& vecLinePoint, Vec
 }
 STIXEL_ERROR CStixelEstimation::RmGround(Vec4f vec4fLine, Mat& imgDisp8)
 {
+    std::cout<<"Stixel Estimation 9.1: Remove Ground-Process"<<std::endl;
 	double slope = vec4fLine[0] / vec4fLine[1];
 	double orig = vec4fLine[2] - slope*vec4fLine[3];
 	if (orig < 0 || slope > 2 || slope < 0.5) {
@@ -252,7 +266,7 @@ STIXEL_ERROR CStixelEstimation::RmSky(Mat& imgDisp8)
 	double orig = 191.696210;*/
 	double orig = m_dGroundVdispOrig - 3;
 	double slope = -0.7; // const - 0.5
-
+    std::cout<<"Stixel Estimation 10.1: Remove Sky-Process"<<std::endl;
 	for (int u = 0; u<imgDisp8.rows; u++){
 		for (int v = 0; v<imgDisp8.cols; v++){
 			int value = imgDisp8.at<uchar>(u, v);
@@ -273,6 +287,7 @@ STIXEL_ERROR CStixelEstimation::RmSky(Mat& imgDisp8)
 
 STIXEL_ERROR CStixelEstimation::StixelDistanceEstimation(Mat& imgDisp8, vector<stixel_t>& vecStixels, bool flgUseMultiLayer)
 {
+	std::cout<<"Stixel Estimation 12.1: Distance Estimation-Process"<<std::endl;
 	STIXEL_ERROR Err;
 	vecStixels.clear();
 	for (int u = 0; u < imgDisp8.cols; u++){
@@ -296,6 +311,7 @@ STIXEL_ERROR CStixelEstimation::StixelDistanceEstimation(Mat& imgDisp8, vector<s
 			if (Err == OK) m_vecobjStixels.push_back(objStixelTemp);
 		}
 	}
+	std::cout<<"Stixel Estimation 12.2: Distance Estimation-Disparity to Distance"<<std::endl;
 	StixelDisparityToDistance(vecStixels);
 	return OK;
 }
@@ -361,6 +377,7 @@ STIXEL_ERROR CStixelEstimation::StixelDisparityEstimation_col_ML(Mat& imgDisp8, 
 }
 STIXEL_ERROR CStixelEstimation::StixelDisparityToDistance(vector<stixel_t>& vecStixels)
 {
+    std::cout<<"Stixel Estimation 12.3: Distance Estimation-Disp to Dist 2"<<std::endl;
 	for (unsigned int u = 0; u < vecStixels.size(); u++){
 		if (vecStixels[u].chDisparity == 0) vecStixels[u].dZ = 0;
 		vecStixels[u].dZ = (m_objStereoParam.objCamParam.m_dFocalLength*m_objStereoParam.m_dBaseLine / ((double)vecStixels[u].chDisparity*(double)m_objStereoParam.m_nNumberOfDisp / 255));
@@ -372,11 +389,15 @@ STIXEL_ERROR CStixelEstimation::StixelDisparityToDistance(vector<stixel_t>& vecS
 STIXEL_ERROR CStixelEstimation::StixelROIConstraint_Lane(vector<stixel_t>& vecStixelsInput,
 	vector<stixel_t>& vecStixelsOutput, float fLaneInterval, int nCenterPointX)
 {
+    std::cout<<"Stixel Estimation 13.1: ROI-Process"<<std::endl;
 	vecStixelsOutput.clear();
 	//double dCenterPointXmeter;
 	//float fLaneIntervalPixel = 0;
-	/*Mat imgTemp = m_imgDisp8.clone();
-	threshold(imgTemp, imgTemp, 255, 255, CV_THRESH_BINARY);*/
+	// Comment out
+	Mat imgTemp = m_imgDisp8.clone();
+	threshold(imgTemp, imgTemp, 255, 255, CV_THRESH_BINARY);
+	waitKey();
+    // Comment out
 
 	for (unsigned int u = 0; u < vecStixelsInput.size(); u++){
 		if (vecStixelsInput[u].chDisparity == 0) continue;
@@ -387,14 +408,18 @@ STIXEL_ERROR CStixelEstimation::StixelROIConstraint_Lane(vector<stixel_t>& vecSt
 			{
 
 				vecStixelsOutput.push_back(vecStixelsInput[u]);
-				/*line(imgTemp,
+				/*Comment out
+                // What is happening?
+				line(imgTemp,
 					Point(vecStixelsInput[u].nCol, vecStixelsInput[u].nGround),
 					Point(vecStixelsInput[u].nCol, vecStixelsInput[u].nHeight),
 					Scalar(vecStixelsInput[u].chDisparity));
 				imshow("stixel", imgTemp);
-				waitKey(1);*/
+				 //*/
+
 			}
 		}
 	}
+	//waitKey();
 	return OK;
 }

@@ -394,10 +394,10 @@ STIXEL_ERROR CStixelEstimation::StixelROIConstraint_Lane(vector<stixel_t>& vecSt
 	//double dCenterPointXmeter;
 	//float fLaneIntervalPixel = 0;
 	// Comment out
-	Mat imgTemp = m_imgDisp8.clone();
+	/*Mat imgTemp = m_imgDisp8.clone();
 	threshold(imgTemp, imgTemp, 255, 255, CV_THRESH_BINARY);
 	waitKey();
-    // Comment out
+    */
 
 	for (unsigned int u = 0; u < vecStixelsInput.size(); u++){
 		if (vecStixelsInput[u].chDisparity == 0) continue;

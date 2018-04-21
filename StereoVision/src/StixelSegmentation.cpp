@@ -20,7 +20,7 @@ SEG_ERROR CStixelSegmentation::SegmentStixel(vector<stixel_t>& objStixels)
 	vector<Object_t> objBBcandidateZ, objBBcandidateX;
 	objBBcandidateZ.clear();
 	objBBcandidateX.clear();
-
+    std::cout<<"Segment Stixels 2: Clustering Z"<<std::endl;
 	StixelZClustering(objStixels, objBBcandidateZ);
 	//cout << objBBcandidateZ.size() << endl;
 	/*for (int n = 0; n < objBBcandidateZ.size(); n++)
@@ -33,9 +33,11 @@ SEG_ERROR CStixelSegmentation::SegmentStixel(vector<stixel_t>& objStixels)
 				<< objBBcandidateZ[n].objStixels[i].dZ << endl;
 		}
 	}*/
+    std::cout<<"Segment Stixels 3: Clustering X"<<std::endl;
 
 	StixelXClustering(objBBcandidateZ, objBBcandidateX);
 	//cout << objBBcandidateX.size() << endl;
+    std::cout<<"Segment Stixels 4: Bounding Box Optimization"<<std::endl;
 
 	StixelBBboxOptimization(objBBcandidateX, m_vecobjBB);
 	//cout << m_vecobjBB.size() << endl;
@@ -46,6 +48,7 @@ SEG_ERROR CStixelSegmentation::SegmentStixel(vector<stixel_t>& objStixels)
 SEG_ERROR CStixelSegmentation::StixelZClustering(vector<stixel_t>& objStixels, vector<Object_t>& objBBcandidate)
 {
 	multimap<double, stixel_t> mapSortedStixel;		// distance
+    std::cout<<"Segment Stixels 2.1: Clustering Z-Process"<<std::endl;
 
 	for (unsigned int i = 0; i < objStixels.size(); i++)
 	{
@@ -121,6 +124,7 @@ void CStixelSegmentation::SetDebugImg(Mat imgTemp)
 SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, vector<Object_t>& objBBOutput)
 {
 	objBBOutput.clear();
+    std::cout<<"Segment Stixels 3.1: Clustering X-Process"<<std::endl;
 
 	for (unsigned int i = 0; i < objBBinput.size(); i++)
 	{
@@ -186,9 +190,11 @@ SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, v
 				objBBOutput.push_back(bbTemp);
 
 				//debug
-				/*rectangle(m_imgDebug, rectTemp, Scalar(0,0,255), 3);
+				/*StixelXClustering
+				std::cout<<"Segment Stixels 3.2: Clustering X-Image 1"<<std::endl;
+				rectangle(m_imgDebug, rectTemp, Scalar(0,0,255), 3);
 				imshow("debug", m_imgDebug);
-				waitKey(1);*/
+				waitKey(1); */
 
 				iterLB = start;
 			}
@@ -221,9 +227,11 @@ SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, v
 
 			objBBOutput.push_back(bbTemp);
 
-			/*rectangle(m_imgDebug, rectTemp, Scalar(0, 0, 255), 3);
+			/*
+			std::cout<<"Segment Stixels 3.3: Clustering X-Image 2"<<std::endl;
+			rectangle(m_imgDebug, rectTemp, Scalar(0, 0, 255), 3);
 			imshow("debug", m_imgDebug);
-			waitKey(1);*/
+			waitKey(1);// Comment */
 			//rectangle(m_imgColorDisp8, rectTemp, Scalar(255, 0, 0), 5);
 		}
 	}
@@ -232,6 +240,8 @@ SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, v
 SEG_ERROR CStixelSegmentation::StixelBBboxOptimization(vector<Object_t>& objBBinput, vector<Object_t>& objBBOutput)
 {
 	objBBOutput.clear();
+    std::cout<<"Segment Stixels 4.1: Bounding Box Optimization Process"<<std::endl;
+
 
 	for (unsigned int i = 0; i < objBBinput.size(); i++){
 		if (objBBinput[i].rectBB.width*objBBinput[i].dZ > m_objStereoParam.objCamParam.m_dFocalLength*0.25		// �ʺ� 0.25m �̻�

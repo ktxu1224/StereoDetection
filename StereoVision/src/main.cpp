@@ -68,8 +68,9 @@ int main()
 
                 // ------------ PREPROCESSING IMAGE --------------------
                 // Change image from RGB to gray/Creat Disparity Map Bm is for
+        std::cout<<"----Start Objectness----"<<std::endl;
 		objStereoVision.Objectness(imgLeft, imgRight);
-
+        std::cout<<"----End Objectness----"<<std::endl;
 		Mat imgDisp8;
                 // ------------CONVERSION-------------------------------
 		objStereoVision.m_matDisp16.convertTo(imgDisp8, CV_8U, 255 / (objParam.m_nNumberOfDisp*16.));

@@ -181,12 +181,13 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 	m_imgGround = Scalar(0); // What is scalar function ?
 	std::cout<<"Stixel Estimation 1: Start"<<std::endl;
 	m_objStixelEstimation.EstimateStixels(m_matDisp16, m_imgDisp8);//, false);
-	std::cout<<"Stixel Estimation : Finished"<<std::endl;
+	std::cout<<"Stixel Estimation 14 : Finished"<<std::endl;
 	m_imgGround = m_objStixelEstimation.m_imgGround;
 	m_vecobjStixelInROI = m_objStixelEstimation.m_vecobjStixelInROI;
 	m_vecobjStixels = m_objStixelEstimation.m_vecobjStixels;
-    std::cout<<"Segment Stixels: Start"<<std::endl;
+    std::cout<<"Segment Stixels 1: Start"<<std::endl;
 	m_objStixelSegmentation.SegmentStixel(m_vecobjStixels);
+	std::cout<<"Segment Stixels 5: Finished"<<std::endl;
 	m_vecobjBB = m_objStixelSegmentation.m_vecobjBB;
 
 

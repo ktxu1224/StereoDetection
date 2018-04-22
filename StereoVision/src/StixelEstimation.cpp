@@ -76,6 +76,7 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 	GroundEstimation(m_imgDisp8);
 	std::cout<<"Stixel Estimation 10: Remove Sky"<<std::endl;
     RmSky(m_imgDisp8);
+    // add max function
 	std::cout<<"Stixel Estimation 11: Morphing"<<std::endl;
 	morphologyEx(m_imgDisp8, m_imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 1);
 

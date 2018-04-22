@@ -35,4 +35,15 @@ fig4 = figure('Name','Stixel ready');
 surf(disp_ready,'EdgeColor','none','LineStyle','none','FaceLighting','phong')
 hold on 
 image(disp_ready,'CDataMapping','scaled')
+
+
+disp_ready_ada = disp_ready;
+disp_ready_ada(disp_ready > 80) = 0;
+
+% Plot Stixel ready Disparity
+fig4 = figure('Name','Stixel adapted');
+surf(disp_ready_ada,'EdgeColor','none','LineStyle','none','FaceLighting','phong')
+hold on 
+image(disp_ready_ada,'CDataMapping','scaled')
+
  

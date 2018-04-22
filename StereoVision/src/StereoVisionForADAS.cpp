@@ -189,16 +189,17 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 	m_objStixelSegmentation.SegmentStixel(m_vecobjStixels);
 	std::cout<<"Segment Stixels 5: Finished"<<std::endl;
 	m_vecobjBB = m_objStixelSegmentation.m_vecobjBB;
-
-
-	/*for (int i = 0; i < m_vecobjStixels.size(); i++)
+    //std::cout<<"Depth: "<<m_vecobjBB[0].rectBB<<std::endl;
+    //waitKey();
+    /*
+	for (int i = 0; i < m_vecobjStixels.size(); i++)
 	{
 		cout << m_vecobjStixels[i].nCol << ":"
 			<< m_vecobjStixels[i].nGround << ":"
 			<< m_vecobjStixels[i].nHeight << ":"
 			<< m_vecobjStixels[i].dZ << endl;
 		imshow("tt", m_imgDisp8);
-		waitKey(1);
+		waitKey();
 	}*/
 //cout << "hi" << endl;
 	return 0;

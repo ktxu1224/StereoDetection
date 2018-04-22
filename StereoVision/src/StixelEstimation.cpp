@@ -5,6 +5,9 @@
 @brief stixel creation
 */
 #include "../include/StixelEstimation.h"
+#include <sstream>
+using namespace std;
+int value(0);
 
 
 CStixelEstimation::CStixelEstimation(StereoCamParam_t& objStereroParam)
@@ -69,6 +72,22 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 	Mat matKernel = getStructuringElement(MORPH_RECT, size);
     std::cout<<"Stixel Estimation 3: Check Size"<<std::endl;
 	SetDispImage(matDisp16, imgDisp8);
+
+    /*
+    stringstream ss;
+
+    string name = "./results/full_disp_";
+    string type = ".jpg";
+
+    ss<<name<<(::value++)<<type;
+    //std::cout<<"ss"<<std::endl;
+    string filename = ss.str();
+    ss.str("");
+
+    imwrite(filename,imgDisp8);
+    */
+
+
     std::cout<<"Stixel Estimation 4: Estimate Ground"<<std::endl;
 	GroundEstimation(m_imgDisp8);
 	std::cout<<"Stixel Estimation 10: Remove Sky"<<std::endl;
@@ -77,7 +96,24 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 	morphologyEx(m_imgDisp8, m_imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 1);
 
 	imshow("rmgndtemp", m_imgDisp8);
-    waitKey();
+
+	// Save Images
+	/*
+	stringstream ss;
+
+    string name = "./results/rm_gnd_";
+    string type = ".jpg";
+
+    ss<<name<<(::value++)<<type;
+    //std::cout<<"ss"<<std::endl;
+    string filename = ss.str();
+    ss.str("");
+
+    imwrite(filename,m_imgDisp8);
+    */
+    //End Save Images
+
+    //waitKey();
     std::cout<<"Stixel Estimation 12: Distance Estimation"<<std::endl;
 	StixelDistanceEstimation(m_imgDisp8, m_vecobjStixels, flgUseMultiLayer);
     std::cout<<"Stixel Estimation 13: Region of Interest(ROI) constrain"<<std::endl;
@@ -96,7 +132,6 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels_only8bitDisp(Mat& imgDisp8, bool
 	RmSky(m_imgDisp8);
 	morphologyEx(m_imgDisp8, m_imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 1);
 
-	imshow("rmgndtemp", m_imgDisp8);
 
 	StixelDistanceEstimation(m_imgDisp8, m_vecobjStixels, flgUseMultiLayer);
 
@@ -168,6 +203,7 @@ STIXEL_ERROR CStixelEstimation::ExtractGroundPoint(Mat& imgVdisp, vector<Point2f
 			}
 		}
 	}
+	//std::cout<<vecLinePoint.size()<<std::endl;
 	return OK;
 }
 STIXEL_ERROR CStixelEstimation::FitLineRansac(vector<Point2f>& vecLinePoint, Vec4f& vec4fLine)
@@ -257,6 +293,20 @@ STIXEL_ERROR CStixelEstimation::RmGround(Vec4f vec4fLine, Mat& imgDisp8)
 			}
 		}
 	}
+
+	/*stringstream ss;
+
+    string name = "./results/rm_gnd_removal";
+    string type = ".jpg";
+
+    ss<<name<<(::value++)<<type;
+    //std::cout<<"ss"<<std::endl;
+    string filename = ss.str();
+    ss.str("");
+
+    imwrite(filename,imgDisp8);
+    */
+
 	return OK;
 }
 

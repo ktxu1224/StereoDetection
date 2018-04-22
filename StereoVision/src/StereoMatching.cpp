@@ -137,6 +137,8 @@ MATCHING_ERROR CStereoMatching::ImproveDisparity_Naive(Mat& imgDisp8)
 	Mat matKernel = getStructuringElement(MORPH_RECT, size);
 
 	morphologyEx(imgDisp8, imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 2);
+
+
 	return NO_PROB;
 }
 MATCHING_ERROR CStereoMatching::ImproveDisparity_WLSFilter(Mat& imgDisp8)

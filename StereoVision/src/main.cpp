@@ -21,6 +21,7 @@
 using namespace std;
 using namespace cv;
 
+
 int main()
 {
 #ifdef VIZ
@@ -36,6 +37,7 @@ int main()
         CSuNoVeMap objSuNoVeMap(objParam); //SNV
 
 	int cntFrame = 0;
+
 	char chLeftImageName[150] = {};
 	char chRightImageName[150] = {};
 	char chOxtsName[150] = {};

@@ -36,11 +36,12 @@ SEG_ERROR CStixelSegmentation::SegmentStixel(vector<stixel_t>& objStixels)
     std::cout<<"Segment Stixels 3: Clustering X"<<std::endl;
 
 	StixelXClustering(objBBcandidateZ, objBBcandidateX);
-	//cout << objBBcandidateX.size() << endl;
+
     std::cout<<"Segment Stixels 4: Bounding Box Optimization"<<std::endl;
 
 	StixelBBboxOptimization(objBBcandidateX, m_vecobjBB);
-	//cout << m_vecobjBB.size() << endl;
+	//std::cout<<m_vecobjBB.size()<<std::endl;
+	//waitKey();
 
 
 	return GOOD;

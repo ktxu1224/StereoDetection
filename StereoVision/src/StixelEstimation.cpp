@@ -72,28 +72,13 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 	Mat matKernel = getStructuringElement(MORPH_RECT, size);
     std::cout<<"Stixel Estimation 3: Check Size"<<std::endl;
 	SetDispImage(matDisp16, imgDisp8);
-
-    /*
-    stringstream ss;
-
-    string name = "./results/full_disp_";
-    string type = ".jpg";
-
-    ss<<name<<(::value++)<<type;
-    //std::cout<<"ss"<<std::endl;
-    string filename = ss.str();
-    ss.str("");
-
-    imwrite(filename,imgDisp8);
-    */
-
-
     std::cout<<"Stixel Estimation 4: Estimate Ground"<<std::endl;
 	GroundEstimation(m_imgDisp8);
 	std::cout<<"Stixel Estimation 10: Remove Sky"<<std::endl;
-	RmSky(m_imgDisp8);
+    RmSky(m_imgDisp8);
 	std::cout<<"Stixel Estimation 11: Morphing"<<std::endl;
 	morphologyEx(m_imgDisp8, m_imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 1);
+
 
 	imshow("rmgndtemp", m_imgDisp8);
 

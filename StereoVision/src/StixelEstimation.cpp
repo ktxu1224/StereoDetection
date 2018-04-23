@@ -84,10 +84,10 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 	imshow("rmgndtemp", m_imgDisp8);
 
 	// Save Images
-	/*
+
 	stringstream ss;
 
-    string name = "./results/rm_gnd_";
+    string name = "./results/stixel_ready_";
     string type = ".jpg";
 
     ss<<name<<(::value++)<<type;
@@ -96,7 +96,7 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
     ss.str("");
 
     imwrite(filename,m_imgDisp8);
-    */
+
     //End Save Images
 
     //waitKey();

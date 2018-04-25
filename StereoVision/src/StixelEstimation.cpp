@@ -85,10 +85,11 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 
 	// Save Images
 
-	stringstream ss;
+	/*stringstream ss;
 
     string name = "./results/stixel_ready_";
     string type = ".jpg";
+
 
     ss<<name<<(::value++)<<type;
     //std::cout<<"ss"<<std::endl;
@@ -97,6 +98,7 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 
     imwrite(filename,m_imgDisp8);
 
+    */
     //End Save Images
 
     //waitKey();

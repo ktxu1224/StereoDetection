@@ -12,10 +12,10 @@
 
 using namespace cv;
 
-enum { Daimler, KITTI, HICAM, CityScape };
+enum { MYDATA, KITTI };
 //enum { Ped, Car, TrafficSign, TrafficLight, Else};
 enum { TP, FN, FP, TP_S, FN_S };
-enum { STEREO_BM = 0 }; //, STEREO_SGBM = 1
+enum { STEREO_BM = 0, STEREO_SGBM = 1 };
 enum { GRAY, COLOR };
 
 struct stixel_t
@@ -82,7 +82,8 @@ struct CameraParam_t
 {
 	double m_dPitchDeg;  	// unit : degree
 	double m_dYawDeg;     // unit : degree
-	double m_dFocalLength;   // unit : pixels
+	double m_dFocalLength_X;   // unit : pixels
+	double m_dFocalLength_Y;
 	double m_dOx;    //< unit : pixels
 	double m_dOy;    // unit : pixels
 	double m_dCameraHeight; // cam height from ground
@@ -93,7 +94,8 @@ struct CameraParam_t
 	CameraParam_t() {
 		m_dPitchDeg = 0.;
 		m_dYawDeg = 0.;
-		m_dFocalLength = 0.;
+		m_dFocalLength_X = 0.;
+		m_dFocalLength_Y = 0;
 		m_dOx = 0.;
 		m_dOy = 0.;
 		m_dCameraHeight = 0.;
@@ -102,6 +104,7 @@ struct CameraParam_t
 		m_sizeSrc = cv::Size(0, 0);
 	}
 };
+
 struct StereoCamParam_t
 {
 	int m_nNumberOfDisp; // number of disparity.
@@ -117,5 +120,5 @@ struct StereoCamParam_t
 	}
 };
 
-#endif // !_DEFSTRUCT_H
+#endif 
 

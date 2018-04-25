@@ -9,25 +9,26 @@ using namespace cv;
 
 int main()
 {
-	StereoCamParam_t objParam = CStereoVisionForADAS::InitStereoParam(KITTI);
-	CStereoVisionForADAS objStereoVision(objParam); //stixel constructor
+	StereoCamParam_t objParam = CStereoVisionForADAS::InitStereoParam(MYDATA);
+	CStereoVisionForADAS objStereoVision(objParam);
 
-	int cntFrame = 0;
+	int cntFrame = 1036;
 	char* chLeftImageName = new char[50];
 	char* chRightImageName = new char[50];
 	int nWaitTime = 0;
 
 	while (true) {
-		sprintf_s(chLeftImageName, 50, "./data/left/%010d.png", cntFrame);
-		sprintf_s(chRightImageName, 50, "./data/right/%010d.png", cntFrame++);
+		sprintf_s(chLeftImageName, 50, "./data/my_data_left/%06d.bmp", cntFrame);
+		sprintf_s(chRightImageName, 50, "./data/my_data_right/%06d.bmp", cntFrame++);
 
 		Mat imgLeft = imread(chLeftImageName, 1);
 		Mat imgRight = imread(chRightImageName, 1);
+
 		if (imgLeft.empty()) {
 			cout << "read image fail" << endl;
 			break;
 		}
-
+	
 		int64 t = getTickCount();
 		// procesing
 		objStereoVision.Objectness(imgLeft, imgRight);
@@ -44,13 +45,10 @@ int main()
 		applyColorMap(imgDisp8, imgDispColor, COLORMAP_OCEAN);
 		objStereoVision.Display(imgResult, imgStixel);
 
-		resize(imgLeft, imgLeft, Size(imgLeft.cols / 2, imgLeft.rows / 2));
-		resize(imgDisp8, imgDisp8, Size(imgDisp8.cols / 2, imgDisp8.rows / 2));
-		resize(imgDispColor, imgDispColor, Size(imgDispColor.cols / 2, imgDispColor.rows / 2));
-		resize(imgResult, imgResult, Size(imgLeft.cols, imgLeft.rows));
-		resize(imgStixel, imgStixel, Size(imgLeft.cols, imgLeft.rows));
+		/*imwrite(".\\result.bmp", imgResult);
+		imwrite(".\\stixel.bmp", imgStixel);*/
 
-		imshow("result", imgResult);
+		imshow ("result", imgResult);
 		imshow("stixel", imgStixel);
 		waitKey(0);
 	}

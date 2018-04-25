@@ -29,7 +29,8 @@ SEG_ERROR CStixelSegmentation::StixelZClustering(vector<stixel_t>& objStixels, v
 {
 	multimap<double, stixel_t> mapSortedStixel;
 
-	for (unsigned int i = 0; i < objStixels.size(); i++)
+	//dZ中很多是inf，可先剔除
+	for (unsigned int i = 0; i < objStixels.size() && objStixels[i].dZ>0; i++)
 	{
 		mapSortedStixel.insert(pair<double, stixel_t>(objStixels[i].dZ, objStixels[i]));
 	}
@@ -38,6 +39,7 @@ SEG_ERROR CStixelSegmentation::StixelZClustering(vector<stixel_t>& objStixels, v
 	multimap<double, stixel_t>::iterator end;
 	start = mapSortedStixel.begin();
 	end = mapSortedStixel.end();
+
 
 	objBBcandidate.clear();
 	Rect rectTemp(start->second.nCol, start->second.nHeight, 0, abs(start->second.nHeight - start->second.nGround));
@@ -134,7 +136,7 @@ SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, v
 
 		while (start != end)
 		{
-			if (start->second.dX - iter->second.dX > dXThre)
+			if (abs(start->second.dX - iter->second.dX) > dXThre)
 			{
 				flgSeparator = true;
 
@@ -232,18 +234,18 @@ SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, v
 
 SEG_ERROR CStixelSegmentation::StixelBBboxOptimization(vector<Object_t>& objBBinput, vector<Object_t>& objBBOutput)
 {
-#if _DEBUG
-	int cntFrame = 10;
-	char* chLeftImageName = new char[50];
-	sprintf_s(chLeftImageName, 50, "./data/left/%010d.png", cntFrame);
-	Mat imgLeft = imread(chLeftImageName, 1);
-	for (int i = 0; i < objBBinput.size(); i++)
-	{
-		rectangle(imgLeft, objBBinput[i].rectBB, Scalar(255, 255, 255), 1);
-		imshow("debug", imgLeft);
-		//waitKey();
-	}
-#endif
+//#if _DEBUG
+//	int cntFrame = 1036;
+//	char* chLeftImageName = new char[50];
+//	sprintf_s(chLeftImageName, 50, "./data/my_data_left/%06d.bmp", cntFrame);
+//	Mat imgLeft = imread(chLeftImageName, 1);
+//	for (int i = 0; i < objBBinput.size(); i++)
+//	{
+//		rectangle(imgLeft, objBBinput[i].rectBB, Scalar(255, 255, 255), 1);
+//		imshow("debug", imgLeft);
+//		waitKey();
+//	}
+//#endif
 
 	objBBOutput.clear();
 
@@ -254,15 +256,15 @@ SEG_ERROR CStixelSegmentation::StixelBBboxOptimization(vector<Object_t>& objBBin
 			objBBOutput.push_back(objBBinput[i]);
 		}
 	}
-	
-#if _DEBUG
-	for (int i = 0; i < objBBOutput.size(); i++)
-	{
-		rectangle(imgLeft, objBBOutput[i].rectBB, Scalar(255, 0, 0), 1);
-		imshow("debug", imgLeft);
-		waitKey();
-	}
-#endif
+
+//#if _DEBUG
+//	for (int i = 0; i < objBBOutput.size(); i++)
+//	{
+//		rectangle(imgLeft, objBBOutput[i].rectBB, Scalar(255, 0, 0), 1);
+//		imshow("debug", imgLeft);
+//		waitKey();
+//	}
+//#endif
 
 	for (unsigned int i = 0; i < objBBOutput.size(); i++)
 	{

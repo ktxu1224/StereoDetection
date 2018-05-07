@@ -30,6 +30,27 @@
     <ClCompile Include="src\StixelEstimation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\tracking\Hungarian.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\detection\StereoMatching.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\detection\StereoVisionForADAS.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\detection\StixelEstimation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\detection\StixelSegmentation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tracking\Tracker.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tracking\SingleTrack.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\DefStruct.h">
@@ -45,6 +66,30 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\StixelSegmenation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tracking\Hungarian.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\detection\DefStruct.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\detection\StereoMatching.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\detection\StereoVisionForADAS.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\detection\StixelEstimation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\detection\StixelSegmenation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tracking\Tracker.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tracking\SingleTrack.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

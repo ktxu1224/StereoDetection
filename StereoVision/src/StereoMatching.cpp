@@ -1,4 +1,4 @@
-#include "../include/StereoMatching.h"
+#include "../detection/StereoMatching.h"
 
 CStereoMatching::CStereoMatching(StereoCamParam_t& objStereoParam)
 {
@@ -28,8 +28,8 @@ void CStereoMatching::SetParamOCVStereo(StereoCamParam_t& objStereoParam)
 	stereoPtr->setDisp12MaxDiff(1);*/
 
 	m_objStereoParam.m_nWindowSize = 9;
-	int p1 = 8 * m_objStereoParam.m_nWindowSize*m_objStereoParam.m_nWindowSize ;
-	int p2 = 32 * m_objStereoParam.m_nWindowSize*m_objStereoParam.m_nWindowSize ;
+	int p1 = 8 * m_objStereoParam.m_nWindowSize*m_objStereoParam.m_nWindowSize;
+	int p2 = 32 * m_objStereoParam.m_nWindowSize*m_objStereoParam.m_nWindowSize;
 
 	stereoPtr->create(0, m_objStereoParam.m_nNumberOfDisp, m_objStereoParam.m_nWindowSize);
 	stereoPtr->setP1(p1);
@@ -39,14 +39,14 @@ void CStereoMatching::SetParamOCVStereo(StereoCamParam_t& objStereoParam)
 	stereoPtr->setSpeckleRange(2);
 	stereoPtr->setSpeckleWindowSize(400);
 	stereoPtr->setDisp12MaxDiff(1);
-	stereoPtr->setMode(cv::StereoSGBM::MODE_SGBM_3WAY);
+	stereoPtr->setMode(cv::StereoSGBM::MODE_SGBM);
 
 }
 
 MATCHING_ERROR CStereoMatching::SetImage(Mat& imgLeft, Mat& imgRight) {
-	if (imgLeft.size() != imgRight.size()) 
+	if (imgLeft.size() != imgRight.size())
 		return IMGSCALE_ERR;
-	if (imgLeft.size() != m_objStereoParam.objCamParam.m_sizeSrc) 
+	if (imgLeft.size() != m_objStereoParam.objCamParam.m_sizeSrc)
 		return IMGSCALE_ERR;
 	if (imgLeft.channels() == 3) {
 		cvtColor(imgLeft, m_imgLeftInput, CV_BGR2GRAY);

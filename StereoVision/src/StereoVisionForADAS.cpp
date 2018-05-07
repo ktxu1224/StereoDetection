@@ -1,4 +1,4 @@
-#include "../include/StereoVisionForADAS.h"
+#include "../detection/StereoVisionForADAS.h"
 
 
 StereoCamParam_t CStereoVisionForADAS::InitStereoParam(int nDatasetName)
@@ -17,7 +17,7 @@ StereoCamParam_t CStereoVisionForADAS::InitStereoParam(int nDatasetName)
 		objStereoCamParam.objCamParam.m_dFocalLength_Y = 1374.2;
 		objStereoCamParam.objCamParam.m_dOx = 798.16;
 		objStereoCamParam.objCamParam.m_dOy = 628.67;
-		objStereoCamParam.objCamParam.m_dPitchDeg = -0.5;
+		objStereoCamParam.objCamParam.m_dPitchDeg = 0.011;//0.5;
 		objStereoCamParam.objCamParam.m_sizeSrc = cv::Size(1571, 900);
 	}
 	else if (nDatasetName == KITTI)
@@ -138,14 +138,11 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight)
 		m_imgRightInput = imgRight;
 	}
 
-	m_objStereoMatching.MakeDisparity(m_imgLeftInput, m_imgRightInput, true);
+	m_objStereoMatching.MakeDisparity(m_imgLeftInput, m_imgRightInput, false);
 	m_matDisp16 = m_objStereoMatching.m_matDisp16;
 	m_imgDisp8 = m_objStereoMatching.m_imgDisp8;
-
-#ifdef _DEBUG
-	imshow("disparity", m_imgDisp8);
-	waitKey();
-#endif
+	imshow("disparity.bmp", m_imgDisp8);
+	//waitKey();
 
 	m_imgGround = Scalar(0);
 	m_objStixelEstimation.EstimateStixels(m_matDisp16, m_imgDisp8);
@@ -178,7 +175,7 @@ int CStereoVisionForADAS::Objectness(Mat& imgLeft, Mat& imgRight, Mat& imgDisp8)
 	m_imgDisp8 = imgDisp8;
 
 	m_imgGround = Scalar(0);
-	m_objStixelEstimation.EstimateStixels_only8bitDisp(m_imgDisp8);//, false);
+	m_objStixelEstimation.EstimateStixels_only8bitDisp(m_imgDisp8);
 	m_imgGround = m_objStixelEstimation.m_imgGround;
 	m_vecobjStixelInROI = m_objStixelEstimation.m_vecobjStixelInROI;
 	m_vecobjStixels = m_objStixelEstimation.m_vecobjStixels;
@@ -230,7 +227,7 @@ void CStereoVisionForADAS::Display(Mat& imgDisplay, Mat& imgStixelResult)
 
 	//Display(imgDisplay);
 	for (unsigned int i = 0; i < m_vecobjBB.size(); i++) {
-		rectangle(imgDisplay, m_vecobjBB[i].rectBB, Scalar::all(255 - m_vecobjBB[i].dZ / fBrightness * 255), 2, 8);
+		rectangle(imgDisplay, m_vecobjBB[i].rectBB, Scalar(255, 0, 0), 2, 8);
 	}
 
 	m_imgStixelGray = Scalar(0);

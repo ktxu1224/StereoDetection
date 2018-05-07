@@ -1,28 +1,27 @@
-#include "../include/StixelEstimation.h"
-
+#include "../detection/StixelEstimation.h"
 
 CStixelEstimation::CStixelEstimation(StereoCamParam_t& objStereroParam)
 {
 	m_objStereoParam = objStereroParam;
-
 	m_nStixelWidth = 1;
-
 	m_dGroundVdispSlope = 0;
 	m_dGroundVdispOrig = 0;
-
 	m_nVdispGroundThreshold = 50;
 	m_nStixelGroundMargin = 15;
-
 	m_imgGround = Mat(m_objStereoParam.objCamParam.m_sizeSrc, CV_8U);
 	m_imgGround = Scalar(0);
+	m_road_estimation_format = ROAD_ESTIMATION_CAMERAMODEL;;
 }
+
 STIXEL_ERROR CStixelEstimation::SetDispImage(Mat& matDisp16)
 {
 	m_matDisp16 = matDisp16;
 	matDisp16.convertTo(m_imgDisp8, CV_8U, 255 / (m_objStereoParam.m_nNumberOfDisp*16.));
-	if (m_imgDisp8.size() != m_objStereoParam.objCamParam.m_sizeSrc) return SIZE_ERR;
+	if (m_imgDisp8.size() != m_objStereoParam.objCamParam.m_sizeSrc)
+		return SIZE_ERR;
 	return OK;
 }
+
 STIXEL_ERROR CStixelEstimation::SetDispImage(Mat& matDisp16, Mat& imgDisp8)
 {
 	m_matDisp16 = matDisp16;
@@ -30,26 +29,25 @@ STIXEL_ERROR CStixelEstimation::SetDispImage(Mat& matDisp16, Mat& imgDisp8)
 	if (m_imgDisp8.size() != m_objStereoParam.objCamParam.m_sizeSrc) return SIZE_ERR;
 	return OK;
 }
+
 STIXEL_ERROR CStixelEstimation::SetDisp8Image(Mat& imgDisp8)
 {
 	m_imgDisp8 = imgDisp8;
-	if (m_imgDisp8.size() != m_objStereoParam.objCamParam.m_sizeSrc) return SIZE_ERR;
+	if (m_imgDisp8.size() != m_objStereoParam.objCamParam.m_sizeSrc)
+		return SIZE_ERR;
 	return OK;
 }
+
 STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16)
 {
 	Size size(5, 5);
 	Mat matKernel = getStructuringElement(MORPH_RECT, size);
 
 	SetDispImage(matDisp16);
-
 	GroundEstimation(m_imgDisp8);
 	RmSky(m_imgDisp8);
 	morphologyEx(m_imgDisp8, m_imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 1);
-
-
 	StixelDistanceEstimation(m_imgDisp8, m_vecobjStixels);
-
 	StixelROIConstraint_Lane(m_vecobjStixels, m_vecobjStixelInROI, 3., m_imgDisp8.cols / 2);
 
 	return OK;
@@ -59,18 +57,12 @@ STIXEL_ERROR CStixelEstimation::EstimateStixels(Mat& matDisp16, Mat& imgDisp8, b
 {
 	Size size(5, 5);
 	Mat matKernel = getStructuringElement(MORPH_RECT, size);
-
 	SetDispImage(matDisp16, imgDisp8);
-
 	GroundEstimation(m_imgDisp8);
 	RmSky(m_imgDisp8);
-	imshow("rm sky", m_imgDisp8);
 
 	morphologyEx(m_imgDisp8, m_imgDisp8, MORPH_OPEN, matKernel, Point(-1, -1), 1);
 
-#if _DEBUG
-	imshow("MORPH_OPEN", m_imgDisp8);
-#endif
 
 	StixelDistanceEstimation(m_imgDisp8, m_vecobjStixels, flgUseMultiLayer);
 
@@ -99,32 +91,21 @@ STIXEL_ERROR CStixelEstimation::GroundEstimation(Mat& imgDisp8)
 {
 	ComputeVDisparity(imgDisp8);
 
-#if _DEBUG
-	imshow("imgVdisp-src", m_imgVdisp);
-	cvWaitKey();
-#endif
-
 	RmVDisparityNoise(m_imgVdisp);
 
-#if _DEBUG
-	imshow("imgVdisp-rmNoise", m_imgVdisp);
-#endif
-
-	ExtractGroundPoint(m_imgVdisp, m_vecLinePoint);
-	FitLineRansac(m_vecLinePoint, m_vec4fLine);
-	RmGround(m_vec4fLine, imgDisp8);
-	//show line in v_disparity
-	line(m_imgVdisp, Point(0, m_dGroundVdispOrig), Point(255, 255 * m_dGroundVdispSlope + m_dGroundVdispOrig), Scalar(255), 4);
-
-#if _DEBUG
-	imshow("line in vdisp map", m_imgVdisp);
-	imshow("after rm ground", imgDisp8);
-#endif
+	if (m_road_estimation_format == ROAD_ESTIMATION_AUTO)
+	{
+		ExtractGroundPoint(m_imgVdisp, m_vecLinePoint);
+		FitLineRansac(m_vecLinePoint, m_vec2fLine);
+	}
+	else
+	{
+		RoadEstimationCameraModel(m_vec2fLine);
+	}
+	RmGround(m_vec2fLine, imgDisp8);
 
 	if (m_dGroundVdispOrig <= 0 || m_dGroundVdispSlope > 2 || m_dGroundVdispSlope < 0.5) {
-#ifdef _DEBUG
 		printf("RANSAC : cannot find ground line. out of ranges\n");
-#endif
 		return GND_ERR;
 	}
 	return OK;
@@ -136,11 +117,11 @@ STIXEL_ERROR CStixelEstimation::ComputeVDisparity(Mat& imgDisp8)
 	m_imgVdisp = Mat(imgDisp8.rows, 255, CV_8U, Scalar(0));
 	for (int u = 0; u < imgDisp8.rows; u++) {
 		if (u < m_objStereoParam.objCamParam.m_nVanishingY)
-			continue; // we are finding ground. therefore we check pixels below vanishing point 
+			continue;        // we are finding ground. therefore we check pixels below vanishing point 
 		for (int v = 0; v < imgDisp8.cols; v++) {
 			int disp = (imgDisp8.at<uchar>(u, v));
 			//if(disp>0 && disp < maxDisp){
-			if (disp > 6 && disp < maxDisp - 2) { 
+			if (disp > 6 && disp < maxDisp - 2) {
 				m_imgVdisp.at<uchar>(u, disp) += 1;
 			}
 		}
@@ -169,14 +150,14 @@ STIXEL_ERROR CStixelEstimation::ExtractGroundPoint(Mat& imgVdisp, vector<Point2f
 	return OK;
 }
 
-STIXEL_ERROR CStixelEstimation::FitLineRansac(vector<Point2f>& vecLinePoint, Vec4f& vec4fLine)
+STIXEL_ERROR CStixelEstimation::FitLineRansac(vector<Point2f>& vecLinePoint, Vec2f& vec2fLine)
 {
+	Vec4f vec4fLine;
 	int iterations = 100;
 	double sigma = 1.;
 	double a_max = 7.;
 
 	int n = vecLinePoint.size();
-	//cout <<"point size : "<< n << endl;
 	if (n < 2)
 	{
 		printf("Points must be more than 2 EA\n");
@@ -216,25 +197,34 @@ STIXEL_ERROR CStixelEstimation::FitLineRansac(vector<Point2f>& vecLinePoint, Vec
 			bestScore = score;
 		}
 	}
+
+	vec2fLine[0] = vec4fLine[0] / vec4fLine[1];
+	vec2fLine[1] = vec4fLine[2] - vec2fLine[0] * vec4fLine[3];
+
 	return OK;
 }
 
-STIXEL_ERROR CStixelEstimation::RmGround(Vec4f vec4fLine, Mat& imgDisp8)
+STIXEL_ERROR CStixelEstimation::RoadEstimationCameraModel(Vec2f& vec2fLine)
 {
-	double slope = vec4fLine[0] / vec4fLine[1];
-	double orig = vec4fLine[2] - slope * vec4fLine[3];
-	if (orig < 0 || slope > 2 || slope < 0.5) {
-#ifdef _DEBUG
-		printf("ground line error\n");
-#endif
-	}
-	else {
-		m_dGroundVdispOrig = orig;
-		m_dGroundVdispSlope = slope;
-	}
+	const float sinTilt = sinf(m_objStereoParam.objCamParam.m_dPitchDeg);
+	const float cosTilt = cosf(m_objStereoParam.objCamParam.m_dPitchDeg);
+	const float a = (m_objStereoParam.m_dBaseLine / m_objStereoParam.objCamParam.m_dCameraHeight) * cosTilt;
+	const float b = (m_objStereoParam.m_dBaseLine / m_objStereoParam.objCamParam.m_dCameraHeight) * (m_objStereoParam.objCamParam.m_dFocalLength_X * sinTilt - m_objStereoParam.objCamParam.m_dOy * cosTilt);
 
-	//m_dGroundVdispOrig += 5;
-	const double deltaHeight = 0.25; //unit: meter
+	vec2fLine[0] = m_objStereoParam.m_nNumberOfDisp / (a * 255.0);
+	vec2fLine[1] = -b / a;
+
+	return OK;
+}
+
+STIXEL_ERROR CStixelEstimation::RmGround(Vec2f vec2fLine, Mat& imgDisp8)
+{
+	m_dGroundVdispSlope = vec2fLine[0];
+	m_dGroundVdispOrig = vec2fLine[1];
+
+	const double deltaHeight = 0.2;  //unit: meter
+	double cosPitch = cos(m_objStereoParam.objCamParam.m_dPitchDeg);
+	double middleValue = (double)m_objStereoParam.m_nNumberOfDisp / (m_objStereoParam.m_dBaseLine*255.);
 
 	for (int u = (int)m_dGroundVdispOrig; u < imgDisp8.rows; u++)
 		for (int v = 0; v < imgDisp8.cols; v++)
@@ -242,8 +232,9 @@ STIXEL_ERROR CStixelEstimation::RmGround(Vec4f vec4fLine, Mat& imgDisp8)
 			int disparityValue = imgDisp8.at<uchar>(u, v);
 			double test = m_dGroundVdispOrig + m_dGroundVdispSlope * disparityValue - u;
 			//remove the points below a certain height
-			double deltaV = deltaHeight * disparityValue *(double)m_objStereoParam.m_nNumberOfDisp / (255 * m_objStereoParam.m_dBaseLine);
-			if (test > deltaV/*m_nStixelGroundMargin*/)
+			//double deltaV = deltaHeight * disparityValue *(double)m_objStereoParam.m_nNumberOfDisp / (255 * m_objStereoParam.m_dBaseLine);
+			double deltaV = disparityValue * middleValue *deltaHeight / cosPitch;
+			if (test > deltaV)
 			{
 				imgDisp8.at<uchar>(u, v) = disparityValue;
 			}
@@ -253,6 +244,7 @@ STIXEL_ERROR CStixelEstimation::RmGround(Vec4f vec4fLine, Mat& imgDisp8)
 				m_imgGround.at<uchar>(u, v) = disparityValue;
 			}
 		}
+
 	return OK;
 }
 
@@ -302,29 +294,18 @@ STIXEL_ERROR CStixelEstimation::StixelDistanceEstimation(Mat& imgDisp8, vector<s
 			Err = StixelDisparityEstimation_col_SL(imgDisp8, u, objStixelTemp);
 			if (Err == OK && objStixelTemp.nHeight > 0 && objStixelTemp.nGround > 0) {
 #ifdef _DEBUG
-				rectangle(imgDisp8, Rect(u, objStixelTemp.nHeight, 1, objStixelTemp.nGround - objStixelTemp.nHeight), Scalar(255, 255, 255), 1);
+				/*rectangle(imgDisp8, Rect(u, objStixelTemp.nHeight, 1, objStixelTemp.nGround - objStixelTemp.nHeight), Scalar(255, 255, 255), 1);
 				rectangle(imgLeft, Rect(u, objStixelTemp.nHeight, 1, objStixelTemp.nGround - objStixelTemp.nHeight), Scalar(255, 255, 255), 1);
 				imshow("stixel-sourceImage", imgLeft);
 				imshow("stixel-disparity", imgDisp8);
-				waitKey();
+				waitKey();*/
 #endif
 				m_vecobjStixels.push_back(objStixelTemp);
 			}
 		}
 	}
 
-	//don't take installation angle into consideration
 	StixelDisparityToDistance(vecStixels);
-
-	//显示ML-disparity
-	//for (size_t i = 0; i < vecStixels.size(); i++)
-	//{
-	//	rectangle(imgDisp8, Rect(vecStixels[i].nCol, vecStixels[i].nHeight, 1, vecStixels[i].nGround - vecStixels[i].nHeight), Scalar(255, 255, 255), 1);
-	//	rectangle(imgLeft, Rect(vecStixels[i].nCol, vecStixels[i].nHeight, 1, vecStixels[i].nGround - vecStixels[i].nHeight), Scalar(255, 255, 255), 1);
-	//	imshow("stixel-sourceImage", imgLeft);
-	//	imshow("stixel-disparity", imgDisp8);
-	//	waitKey();
-	//}
 
 	return OK;
 }
@@ -334,18 +315,23 @@ STIXEL_ERROR CStixelEstimation::StixelDisparityEstimation_col_SL(Mat& imgDisp8, 
 {
 	int nIter = imgDisp8.rows / 2;
 	uchar bottomDisp, topDisp;
-	const double deltaHeight = 0.25; //physical height，unit: meter
-	const double depthDiffThre = 0.5;    //try to find stixel whose depth of upbound and downbound within 1m, unit: meter
+	const double deltaHeight = 0.1; //physical height，unit: meter
+	const double depthDiffThre = 1.5;    //try to find stixel whose depth of upbound and downbound within 1m, unit: meter
 	double zTopBound = 0.;
 	double zBottomBound = 0.;
 	bool flag = true;
 	bool breakFlag = false;
+	double cosPitch = cos(m_objStereoParam.objCamParam.m_dPitchDeg);
+	double sinPitch = sin(m_objStereoParam.objCamParam.m_dPitchDeg);
+	double middleValue = m_objStereoParam.m_dBaseLine*255. / (double)m_objStereoParam.m_nNumberOfDisp;
+
 	for (int v = 1; v < nIter && !breakFlag; v++) {
 		topDisp = imgDisp8.at<uchar>(v, col);
 		bottomDisp = imgDisp8.at<uchar>(imgDisp8.rows - v, col);
 		//get the v coordinate of up bound
 		if (topDisp > 0 && flag) {
-			zTopBound = m_objStereoParam.objCamParam.m_dFocalLength_X*m_objStereoParam.m_dBaseLine / ((double)topDisp*(double)m_objStereoParam.m_nNumberOfDisp / 255);
+			//zTopBound = m_objStereoParam.objCamParam.m_dFocalLength_X*m_objStereoParam.m_dBaseLine / ((double)topDisp*(double)m_objStereoParam.m_nNumberOfDisp / 255);
+			zTopBound = middleValue * (m_objStereoParam.objCamParam.m_dFocalLength_X*cosPitch + (m_objStereoParam.objCamParam.m_dOy - v)*sinPitch) / static_cast<double>(topDisp);
 			if (zBottomBound == 0 || abs(zTopBound - zBottomBound) < depthDiffThre)
 			{
 				flag = false;
@@ -357,8 +343,10 @@ STIXEL_ERROR CStixelEstimation::StixelDisparityEstimation_col_SL(Mat& imgDisp8, 
 		//get the v coordinate of down bound
 		if (bottomDisp > 0 && objStixel.nGround == -1) {
 			flag = true;
-			zBottomBound = m_objStereoParam.objCamParam.m_dFocalLength_X*m_objStereoParam.m_dBaseLine / ((double)bottomDisp*(double)m_objStereoParam.m_nNumberOfDisp / 255);
-			double deltaV = deltaHeight * bottomDisp *(double)m_objStereoParam.m_nNumberOfDisp / (255 * m_objStereoParam.m_dBaseLine); //加上地面移除中的多去掉的高度（图像中的像素单位），使得stixel的下边界位于地面		
+			//zBottomBound = m_objStereoParam.objCamParam.m_dFocalLength_X*m_objStereoParam.m_dBaseLine / ((double)bottomDisp*(double)m_objStereoParam.m_nNumberOfDisp / 255);
+			zBottomBound = middleValue * (m_objStereoParam.objCamParam.m_dFocalLength_X*cosPitch + (m_objStereoParam.objCamParam.m_dOy - v)*sinPitch) / static_cast<double>(bottomDisp);
+			//加上地面移除中的多去掉的高度（图像中的像素单位），使得stixel的下边界位于地面		
+			double deltaV = bottomDisp * deltaHeight / (middleValue*cosPitch);
 			objStixel.nGround = imgDisp8.rows - v + deltaV;  //nGround为stixel下边界在图像中的行坐标
 			objStixel.nCol = col;   //图像中的列坐标
 			nIter = imgDisp8.rows - v;
@@ -520,13 +508,22 @@ STIXEL_ERROR CStixelEstimation::StixelDisparityEstimation_col_ML(Mat& imgDisp8, 
 //dont take installation into consideration
 STIXEL_ERROR CStixelEstimation::StixelDisparityToDistance(vector<stixel_t>& vecStixels)
 {
+	double cosPitch = cos(m_objStereoParam.objCamParam.m_dPitchDeg);
+	double sinPitch = sin(m_objStereoParam.objCamParam.m_dPitchDeg);
+	double middleValue = m_objStereoParam.m_dBaseLine*255. / (double)m_objStereoParam.m_nNumberOfDisp;
+
 	for (unsigned int u = 0; u < vecStixels.size(); u++) {
 		if (vecStixels[u].chDisparity == 0)
 			vecStixels[u].dZ = 0;
-		vecStixels[u].dZ = m_objStereoParam.objCamParam.m_dFocalLength_X*m_objStereoParam.m_dBaseLine / ((double)vecStixels[u].chDisparity*(double)m_objStereoParam.m_nNumberOfDisp / 255);
-		vecStixels[u].dX = vecStixels[u].dZ*(double)(vecStixels[u].nCol - m_objStereoParam.objCamParam.m_dOx) / m_objStereoParam.objCamParam.m_dFocalLength_X;
-		vecStixels[u].dY_bottom = vecStixels[u].dZ*(double)(vecStixels[u].nGround - m_objStereoParam.objCamParam.m_dOy) / m_objStereoParam.objCamParam.m_dFocalLength_Y;
-		vecStixels[u].dY_top = vecStixels[u].dZ*(double)(vecStixels[u].nHeight - m_objStereoParam.objCamParam.m_dOy) / m_objStereoParam.objCamParam.m_dFocalLength_Y;
+		vecStixels[u].dZ = middleValue * (m_objStereoParam.objCamParam.m_dFocalLength_X*cosPitch + (m_objStereoParam.objCamParam.m_dOy - 0.5*(vecStixels[u].nHeight + vecStixels[u].nGround))*sinPitch) / static_cast<double>(vecStixels[u].chDisparity);
+		vecStixels[u].dX = -0.5*m_objStereoParam.m_dBaseLine + middleValue * (vecStixels[u].nCol - m_objStereoParam.objCamParam.m_dOx) / static_cast<double>(vecStixels[u].chDisparity);
+		vecStixels[u].dY_bottom = ((vecStixels[u].nGround - m_objStereoParam.objCamParam.m_dOy)*cosPitch + m_objStereoParam.objCamParam.m_dFocalLength_Y*sinPitch)*middleValue / static_cast<double>(vecStixels[u].chDisparity);
+		vecStixels[u].dY_top = ((vecStixels[u].nHeight - m_objStereoParam.objCamParam.m_dOy)*cosPitch + m_objStereoParam.objCamParam.m_dFocalLength_Y*sinPitch)*middleValue / static_cast<double>(vecStixels[u].chDisparity);
+
+		//vecStixels[u].dZ = m_objStereoParam.objCamParam.m_dFocalLength_X*m_objStereoParam.m_dBaseLine / ((double)vecStixels[u].chDisparity*(double)m_objStereoParam.m_nNumberOfDisp / 255);
+		//vecStixels[u].dX = vecStixels[u].dZ*(double)(vecStixels[u].nCol - m_objStereoParam.objCamParam.m_dOx) / m_objStereoParam.objCamParam.m_dFocalLength_X;
+		//vecStixels[u].dY_bottom = vecStixels[u].dZ*(double)(vecStixels[u].nGround - m_objStereoParam.objCamParam.m_dOy) / m_objStereoParam.objCamParam.m_dFocalLength_Y;
+		//vecStixels[u].dY_top = vecStixels[u].dZ*(double)(vecStixels[u].nHeight - m_objStereoParam.objCamParam.m_dOy) / m_objStereoParam.objCamParam.m_dFocalLength_Y;
 	}
 	return OK;
 }

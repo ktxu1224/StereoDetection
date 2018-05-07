@@ -1,4 +1,4 @@
-#include "../include/StixelSegmenation.h"
+#include "../detection/StixelSegmenation.h"
 
 CStixelSegmentation::CStixelSegmentation(StereoCamParam_t objStereoParam)
 {
@@ -9,17 +9,15 @@ SEG_ERROR CStixelSegmentation::SegmentStixel(vector<stixel_t>& objStixels)
 {
 	if (objStixels.size() < 1)
 		return SIZ_ERR;
-	m_vecobjBB.clear();
 
+	m_vecobjBB.clear();
 	vector<Object_t> objBBcandidateZ, objBBcandidateX;
 	objBBcandidateZ.clear();
 	objBBcandidateX.clear();
 
 	StixelZClustering(objStixels, objBBcandidateZ);
-
 	StixelXClustering(objBBcandidateZ, objBBcandidateX);
-
-	StixelBBboxOptimization(objBBcandidateX, m_vecobjBB);
+	ObjectFilter(objBBcandidateX, m_vecobjBB);
 
 	return GOOD;
 }
@@ -40,13 +38,12 @@ SEG_ERROR CStixelSegmentation::StixelZClustering(vector<stixel_t>& objStixels, v
 	start = mapSortedStixel.begin();
 	end = mapSortedStixel.end();
 
-
 	objBBcandidate.clear();
 	Rect rectTemp(start->second.nCol, start->second.nHeight, 0, abs(start->second.nHeight - start->second.nGround));
 	Object_t bbTemp(rectTemp, start->second, start->second.dX, start->second.dX, start->second.dY_top, start->second.dY_bottom);
 	objBBcandidate.push_back(bbTemp);
 	*start++;
-	const double dZThreshold = 0.8;//depth threshold, unit: meter
+	const double dZThreshold = 0.55;  //depth threshold, unit: meter
 	while (start != end)
 	{
 		bool flgDetected = false;
@@ -93,8 +90,8 @@ SEG_ERROR CStixelSegmentation::StixelZClustering(vector<stixel_t>& objStixels, v
 	} //<<end of while
 
 	//calculate width and height of each object, filter based on width and height
-	const double heightThre = 0.5; //unit£ºmeter
-	const double WidthThre = 0.15;  //unit£ºmeter
+	const double heightThre = 0.2; //unit£ºmeter
+	const double WidthThre = 0.1;  //unit£ºmeter
 	vector<Object_t>::iterator it;
 	for (it = objBBcandidate.begin();it != objBBcandidate.end();)
 	{
@@ -130,7 +127,7 @@ SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, v
 
 		*start++;
 		bool flgSeparator = false;
-		const double dXThre = 0.3; //x coordinate threshold in 3D world
+		const double dXThre = 0.3; //unit: meter
 		multimap<int, stixel_t>::iterator iterLB = mapSortedStixel.begin();    // Left bound
 		multimap<int, stixel_t>::iterator iterRB = mapSortedStixel.end();      // Right bound
 
@@ -232,21 +229,8 @@ SEG_ERROR CStixelSegmentation::StixelXClustering(vector<Object_t>& objBBinput, v
 	return GOOD;
 }
 
-SEG_ERROR CStixelSegmentation::StixelBBboxOptimization(vector<Object_t>& objBBinput, vector<Object_t>& objBBOutput)
+SEG_ERROR CStixelSegmentation::ObjectFilter(vector<Object_t>& objBBinput, vector<Object_t>& objBBOutput)
 {
-//#if _DEBUG
-//	int cntFrame = 1036;
-//	char* chLeftImageName = new char[50];
-//	sprintf_s(chLeftImageName, 50, "./data/my_data_left/%06d.bmp", cntFrame);
-//	Mat imgLeft = imread(chLeftImageName, 1);
-//	for (int i = 0; i < objBBinput.size(); i++)
-//	{
-//		rectangle(imgLeft, objBBinput[i].rectBB, Scalar(255, 255, 255), 1);
-//		imshow("debug", imgLeft);
-//		waitKey();
-//	}
-//#endif
-
 	objBBOutput.clear();
 
 	for (unsigned int i = 0; i < objBBinput.size(); i++)
@@ -256,15 +240,6 @@ SEG_ERROR CStixelSegmentation::StixelBBboxOptimization(vector<Object_t>& objBBin
 			objBBOutput.push_back(objBBinput[i]);
 		}
 	}
-
-//#if _DEBUG
-//	for (int i = 0; i < objBBOutput.size(); i++)
-//	{
-//		rectangle(imgLeft, objBBOutput[i].rectBB, Scalar(255, 0, 0), 1);
-//		imshow("debug", imgLeft);
-//		waitKey();
-//	}
-//#endif
 
 	for (unsigned int i = 0; i < objBBOutput.size(); i++)
 	{

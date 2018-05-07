@@ -102,6 +102,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -143,18 +144,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\detection\StereoMatching.cpp" />
+    <ClCompile Include="src\detection\StereoVisionForADAS.cpp" />
+    <ClCompile Include="src\detection\StixelEstimation.cpp" />
+    <ClCompile Include="src\detection\StixelSegmentation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\StereoMatching.cpp" />
     <ClCompile Include="src\StereoVisionForADAS.cpp" />
     <ClCompile Include="src\StixelEstimation.cpp" />
     <ClCompile Include="src\StixelSegmentation.cpp" />
+    <ClCompile Include="src\tracking\SingleTrack.cpp" />
+    <ClCompile Include="src\tracking\Hungarian.cpp" />
+    <ClCompile Include="src\tracking\Tracker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\DefStruct.h" />
+    <ClInclude Include="include\detection\DefStruct.h" />
+    <ClInclude Include="include\detection\StereoMatching.h" />
+    <ClInclude Include="include\detection\StereoVisionForADAS.h" />
+    <ClInclude Include="include\detection\StixelEstimation.h" />
+    <ClInclude Include="include\detection\StixelSegmenation.h" />
     <ClInclude Include="include\StereoMatching.h" />
     <ClInclude Include="include\StereoVisionForADAS.h" />
     <ClInclude Include="include\StixelEstimation.h" />
     <ClInclude Include="include\StixelSegmenation.h" />
+    <ClInclude Include="include\tracking\SingleTrack.h" />
+    <ClInclude Include="include\tracking\Hungarian.h" />
+    <ClInclude Include="include\tracking\Tracker.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="data\left\0000000000.png" />
